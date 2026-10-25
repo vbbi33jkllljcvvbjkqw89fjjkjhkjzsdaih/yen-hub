@@ -9,6 +9,34 @@
     ^^^ if you find anything that I forgot to do aswell.
 ]]
 
+local YenImport = ...
+
+local function Safe(Fn)
+    if type(Fn) ~= "function" then
+        return Fn
+    end
+
+    return function(...)
+        local Ok, Err = pcall(Fn, ...)
+
+        if not Ok and YenImport and YenImport.Report then
+            YenImport.Report("Farcal", Err)
+        end
+    end
+end
+
+local function warn(Message)
+    if YenImport and YenImport.Report then
+        YenImport.Report("Farcal", Message)
+    end
+end
+
+local task = setmetatable({
+    delay = function(Time, Fn, ...) return task.delay(Time, Safe(Fn), ...) end,
+    spawn = function(Fn, ...) return task.spawn(Safe(Fn), ...) end,
+    defer = function(Fn, ...) return task.defer(Safe(Fn), ...) end,
+}, { __index = task })
+
 if getgenv().FarcalLibrary and getgenv().FarcalLibrary.Exit then
     getgenv().FarcalLibrary:Exit()
 end
@@ -428,7 +456,7 @@ local Library = {
             Self.UnusedHolder.Instance:Destroy()
         end
 
-        Library = nil
+
         getgenv().FarcalLibrary = nil
     end
 
@@ -479,7 +507,7 @@ local Library = {
         local Thread
 
         Thread = task.spawn(function()
-            Function()
+            Safe(Function)()
 
             local Index = table.find(Library.Threads, Thread)
 
@@ -493,6 +521,7 @@ local Library = {
     end
 
     Library.Connect = function(Self, Signal, Callback)
+        Callback = Safe(Callback)
         local Connection
 
         if type(Signal) == "string" and Self.Instance then
@@ -692,13 +721,13 @@ local Library = {
                     return
                 end
 
-                InputChanged = Input.Changed:Connect(function()
+                InputChanged = Input.Changed:Connect(Safe(function()
                     if Input.UserInputState == Enum.UserInputState.End then
                         Dragging = false
                         InputChanged:Disconnect()
                         InputChanged = nil
                     end
-                end)
+                end))
             end
         end)
 
@@ -825,7 +854,7 @@ local Library = {
                 return
             end
 
-            ResizeConnection = RunService.RenderStepped:Connect(ApplyResize)
+            ResizeConnection = RunService.RenderStepped:Connect(Safe(ApplyResize))
             table.insert(Library.Connections, ResizeConnection)
         end
 
@@ -5557,14 +5586,14 @@ local Library = {
                 Watermark:SetSearch(false)
             end)
 
-            Items["SearchBox"].Instance:GetPropertyChangedSignal("Text"):Connect(function()
+            Items["SearchBox"].Instance:GetPropertyChangedSignal("Text"):Connect(Safe(function()
                 if not Watermark.Searching then
                     return
                 end
 
                 Search.Query = Items["SearchBox"].Instance.Text
                 RebuildResults(Search.Query)
-            end)
+            end))
 
             Library:Connect(UserInputService.InputBegan, function(Input, GameProcessed)
                 if Input.KeyCode == Enum.KeyCode.F and (UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.RightControl)) then
@@ -9798,7 +9827,7 @@ local Library = {
                 end
 
                 if TextTween then
-                    TextTween.Completed:Connect(FinishHide)
+                    TextTween.Completed:Connect(Safe(FinishHide))
                 else
                     task.delay(PopupInfo.Time, FinishHide)
                 end
@@ -9902,7 +9931,7 @@ local Library = {
                     return
                 end
 
-                InputChanged = Input.Changed:Connect(function()
+                InputChanged = Input.Changed:Connect(Safe(function()
                     if Input.UserInputState == Enum.UserInputState.End then
                         Slider.Sliding = false
                         Slider:UpdateVisuals(Slider.Value)
@@ -9915,7 +9944,7 @@ local Library = {
                         InputChanged:Disconnect()
                         InputChanged = nil
                     end
-                end)
+                end))
             end
 
             Items["RealSliderOutline"]:Connect("InputBegan", BeginSlide)

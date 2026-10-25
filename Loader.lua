@@ -3,14 +3,26 @@
 local Import = ...
 
 if not Import then
-	local Root = getgenv().YenLocalRoot
-	local Source = Root and readfile(Root .. "Import.lua") or game:HttpGet("https://raw.githubusercontent.com/vbbi33jkllljcvvbjkqw89fjjkjhkjzsdaih/yen-hub/main/" .. "Import.lua")
+	local Ok, Result = pcall(function()
+		local Root = getgenv().YenLocalRoot
+		local Source = Root and readfile(Root .. "Import.lua") or game:HttpGet("https://raw.githubusercontent.com/vbbi33jkllljcvvbjkqw89fjjkjhkjzsdaih/yen-hub/main/" .. "Import.lua")
 
-	Import = loadstring(Source)()
+		return loadstring(Source)()
+	end)
+
+	if not Ok or type(Result) ~= "table" then
+		pcall(function()
+			game:GetService("StarterGui"):SetCore("SendNotification", { Title = "Yen", Text = "Could not load Yen. Check your connection and try again.", Duration = 6 })
+		end)
+
+		return
+	end
+
+	Import = Result
 end
 
 if getgenv().YenLoading then
-	return warn("[Yen] already loading")
+	return Import.Notify("Yen is already loading.")
 end
 
 getgenv().YenLoading = true
@@ -49,5 +61,6 @@ local Ok, Err = pcall(Main)
 getgenv().YenLoading = false
 
 if not Ok then
-	warn("[Yen] " .. tostring(Err))
+	Import.Report("Loader", Err)
+	Import.Notify("Yen could not load. Check your connection and try again.")
 end

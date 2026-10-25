@@ -3,15 +3,29 @@
 local Import = ...
 
 if not Import then
-	local Root = getgenv().YenLocalRoot
-	local Source = Root and readfile(Root .. "Import.lua") or game:HttpGet("https://raw.githubusercontent.com/vbbi33jkllljcvvbjkqw89fjjkjhkjzsdaih/yen-hub/main/" .. "Import.lua")
+	local Ok, Result = pcall(function()
+		local Root = getgenv().YenLocalRoot
+		local Source = Root and readfile(Root .. "Import.lua") or game:HttpGet("https://raw.githubusercontent.com/vbbi33jkllljcvvbjkqw89fjjkjhkjzsdaih/yen-hub/main/" .. "Import.lua")
 
-	Import = loadstring(Source)()
+		return loadstring(Source)()
+	end)
+
+	if not Ok or type(Result) ~= "table" then
+		return
+	end
+
+	Import = Result
 end
 
 local HttpService = game:GetService("HttpService")
 
-local Theme = Import.Load("Theme.lua")
+local ThemeOk, Theme = pcall(Import.Load, "Theme.lua")
+
+if not ThemeOk then
+	Import.Report("KeySystem", Theme)
+
+	return
+end
 
 local SavedKeyPath = "YenHub/key.txt"
 

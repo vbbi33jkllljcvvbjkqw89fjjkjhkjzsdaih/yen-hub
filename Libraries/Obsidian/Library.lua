@@ -1,3 +1,33 @@
+local YenImport = ...
+
+local Yen = {}
+
+function Yen.Safe(Fn)
+    if type(Fn) ~= "function" then
+        return Fn
+    end
+
+    return function(...)
+        local Ok, Err = pcall(Fn, ...)
+
+        if not Ok and YenImport and YenImport.Report then
+            YenImport.Report("Obsidian", Err)
+        end
+    end
+end
+
+local function warn(Message)
+    if YenImport and YenImport.Report then
+        YenImport.Report("Obsidian", Message)
+    end
+end
+
+local task = setmetatable({
+    delay = function(Time, Fn, ...) return task.delay(Time, Yen.Safe(Fn), ...) end,
+    spawn = function(Fn, ...) return task.spawn(Yen.Safe(Fn), ...) end,
+    defer = function(Fn, ...) return task.defer(Yen.Safe(Fn), ...) end,
+}, { __index = task })
+
 local cloneref = (cloneref or clonereference or function(instance: any)
     return instance
 end)
@@ -2118,7 +2148,7 @@ function Library:SafeCallback(Func: (...any) -> ...any, ...: any)
     end
 
     local Result = table.pack(xpcall(Func, function(Error)
-        task.defer(error, debug.traceback(Error, 2))
+        if YenImport and YenImport.Report then YenImport.Report("Obsidian", Error) end
         if Library.NotifyOnError and Library.Notify then
             Library:Notify(Error)
         end

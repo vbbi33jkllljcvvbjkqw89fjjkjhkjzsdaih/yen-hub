@@ -79,10 +79,42 @@ function Import.Asset(Path, Target, Magic)
 	return getcustomasset(Target)
 end
 
-for _, Folder in { "YenHub", "YenHub/Assets" } do
-	if not isfolder(Folder) then
-		makefolder(Folder)
+--/ Nothing in Yen writes to the console. Problems go here and are shown in the UI
+
+Import.Errors = {}
+
+function Import.Report(Context, Message)
+	local Errors = Import.Errors
+
+	if #Errors >= 100 then
+		table.remove(Errors, 1)
+	end
+
+	table.insert(Errors, string.format("[%s] %s", tostring(Context), tostring(Message)))
+end
+
+function Import.Notify(Text)
+	pcall(function()
+		game:GetService("StarterGui"):SetCore("SendNotification", { Title = "Yen", Text = Text, Duration = 6 })
+	end)
+end
+
+function Import.Safe(Context, Callback)
+	return function(...)
+		local Ok, Err = pcall(Callback, ...)
+
+		if not Ok then
+			Import.Report(Context, Err)
+		end
 	end
 end
+
+pcall(function()
+	for _, Folder in { "YenHub", "YenHub/Assets" } do
+		if not isfolder(Folder) then
+			makefolder(Folder)
+		end
+	end
+end)
 
 return Import
