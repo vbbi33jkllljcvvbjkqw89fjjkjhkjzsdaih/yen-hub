@@ -1,0 +1,21 @@
+--/ Key system settings. Provider "Static" checks Keys, provider "Http" asks your own server
+
+return {
+	Name = "Yen",
+	Placeholder = "Key goes here",
+	Remember = true,
+
+	GetKeyLink = "",
+	DiscordLink = "",
+	TutorialLink = "",
+
+	Provider = "Static",
+
+	--/ Keys in a public repo are visible to everyone, use Http for real protection
+	Keys = { "yen" },
+
+	--/ The server must answer true or {"valid":true}. {Key} and {Hwid} are filled in for you
+	Http = {
+		Url = "https://example.com/validate?key={Key}&hwid={Hwid}",
+	},
+}
