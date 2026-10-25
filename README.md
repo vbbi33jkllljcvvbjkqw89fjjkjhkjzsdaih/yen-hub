@@ -33,6 +33,7 @@ The interface (Obsidian or Farcal) is switched in Settings > Interface and remem
 | `KeySystem.lua` | Key window (`Run`) and popups (`Notice`) |
 | `KeyConfig.lua` | Name, links and how keys are checked |
 | `Games.lua` | Supported games and the script each one loads |
+| `Terms.lua` | Terms of Service shown after the key |
 | `Theme.lua` | Colors shared by every interface |
 | `Import.lua` | Fetches files from this repository |
 | `Libraries/`, `Assets/` | UI libraries, font and logo, see `THIRD_PARTY.md` |
@@ -40,6 +41,12 @@ The interface (Obsidian or Farcal) is switched in Settings > Interface and remem
 ## Add a game
 
 Add an entry to `Games.lua` with the PlaceId (or GameId) and the script to load, then upload the script next to it.
+
+## Key lifetime and terms
+
+A key is valid for `Duration` seconds (one hour, set in `KeyConfig.lua`). When it runs out the hub unloads and the key window comes back; the hub shows the time left in Live Stats.
+
+After the key, players must accept the Terms of Service in `Terms.lua`. The acceptance is remembered until you raise `Version` in that file. The text is a template, have it checked before you rely on it.
 
 ## Keys
 

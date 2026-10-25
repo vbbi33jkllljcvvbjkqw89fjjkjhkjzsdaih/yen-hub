@@ -47,13 +47,61 @@ local function Main()
 		})
 	end
 
-	if not KeySystem.Run(Import.Load("KeyConfig.lua")) then
-		return
+	local KeyConfig = Import.Load("KeyConfig.lua")
+	local Terms = Import.Load("Terms.lua")
+	local Token = {}
+
+	getgenv().YenWatch = Token
+
+	local Start
+
+	--/ When the key runs out the script is unloaded and the key is asked for again
+	local function Watch(ExpiresAt)
+		task.delay(math.max(ExpiresAt - os.time(), 0), Import.Safe("Relock", function()
+			if getgenv().YenWatch ~= Token then
+				return
+			end
+
+			if getgenv().YenHub then
+				pcall(getgenv().YenHub.Unload)
+			end
+
+			KeySystem.Forget()
+
+			getgenv().YenKeyExpires = nil
+			getgenv().YenLoading = true
+
+			Import.Notify("Your key expired. Enter it again to keep using Yen.")
+
+			local Ok, Err = pcall(Start, true)
+
+			getgenv().YenLoading = false
+
+			if not Ok then
+				Import.Report("Relock", Err)
+			end
+		end))
 	end
 
-	getgenv().YenGame = Entry
+	Start = function(Fresh)
+		local Unlocked, ExpiresAt = KeySystem.Run(KeyConfig, { Fresh = Fresh })
 
-	Import.Load(Entry.Script)
+		if not Unlocked then
+			return
+		end
+
+		if not KeySystem.Terms(Terms) then
+			return Import.Notify("You must accept the Terms of Service to use Yen.")
+		end
+
+		getgenv().YenGame = Entry
+		getgenv().YenKeyExpires = ExpiresAt
+
+		Import.Load(Entry.Script)
+		Watch(ExpiresAt)
+	end
+
+	Start(false)
 end
 
 local Ok, Err = pcall(Main)

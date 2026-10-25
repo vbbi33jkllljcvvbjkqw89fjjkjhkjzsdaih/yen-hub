@@ -927,7 +927,7 @@ local Library = {
     end
 
     Library.Round = function(Self, Number, Float)
-        local Multiplier = 1 / (Float or 1)
+        local Multiplier = 1 / ((Float and Float > 0) and Float or 1)
         return math.floor(Number * Multiplier) / Multiplier
     end
 
@@ -6581,6 +6581,7 @@ local Library = {
                 Description = Params.Description or Params.description or Params.Content or Params.content or "",
                 Buttons = Params.Buttons or Params.buttons or { },
                 Width = Params.Width or Params.width or 355,
+                MaxHeight = Params.MaxHeight or Params.maxheight or 320,
                 Closing = false,
                 Items = { },
             }
@@ -6929,8 +6930,26 @@ local Library = {
             end
 
             local RefreshSize = function()
-                local DescHeight = math.max(Items["Description"].Instance.TextBounds.Y, 18)
-                local Height = math.clamp(8 + 18 + 6 + 1 + 10 + DescHeight + 16 + 32 + 8, 120, 320)
+                local DescHeight = Items["Description"].Instance.TextBounds.Y
+
+                local MeasureOk, Measured = pcall(function()
+                    local MeasureParams = Instance.new("GetTextBoundsParams")
+                    MeasureParams.Text = Notification.Description
+                    MeasureParams.Font = Library.Font
+                    MeasureParams.Size = Library.FontSize
+                    MeasureParams.Width = math.max(Notification.Width - 20, 50)
+
+                    return TextService:GetTextBoundsAsync(MeasureParams).Y
+                end)
+
+                if MeasureOk then
+                    DescHeight = Measured
+                end
+
+                DescHeight = math.max(DescHeight, 18)
+                Items["Description"].Instance.AutomaticSize = Enum.AutomaticSize.None
+                Items["Description"].Instance.Size = UDim2.new(1, -16, 0, DescHeight)
+                local Height = math.clamp(8 + 18 + 6 + 1 + 10 + DescHeight + 16 + 32 + 8, 120, math.min(Notification.MaxHeight, math.max(workspace.CurrentCamera.ViewportSize.Y * 0.92, 160)))
                 return Height
             end
 
@@ -10744,6 +10763,7 @@ local Library = {
                     OptionData.Button:Connect("MouseButton1Down", function()
                         Library:SetOpenFrameInteracting(true)
                         OptionData:Set()
+                        if not Dropdown.Multi then Dropdown:SetOpen(false) end
 
                         task.delay(0.08, function()
                             Library:SetOpenFrameInteracting(false)

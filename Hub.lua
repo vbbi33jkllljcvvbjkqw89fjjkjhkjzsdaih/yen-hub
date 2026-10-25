@@ -524,6 +524,7 @@ local function Run()
 		local FpsLabel = Ui.Label(Stats, "FPS: --")
 		local PingLabel = Ui.Label(Stats, "Ping: --")
 		local SessionLabel = Ui.Label(Stats, "Session: 00:00:00")
+		local KeyLabel = Ui.Label(Stats, "Key: --")
 
 		local Changelog = Ui.AddGroup(InfoTab, "Changelog", "scroll-text", "Right")
 
@@ -593,6 +594,14 @@ local function Run()
 			PingLabel:SetText("Ping: " .. Ping .. " ms")
 			SessionLabel:SetText(string.format("Session: %02d:%02d:%02d", Elapsed // 3600, Elapsed % 3600 // 60, Elapsed % 60))
 			ErrorLabel:SetText("Errors: " .. #Import.Errors)
+
+			local Expires = getgenv().YenKeyExpires
+
+			if Expires then
+				local Left = math.max(Expires - os.time(), 0)
+
+				KeyLabel:SetText(string.format("Key: %02d:%02d:%02d left", Left // 3600, Left % 3600 // 60, Left % 60))
+			end
 		end)))
 
 		local GlitchFrames = { "¥en", "Yen", "¥en", "Y3n", "¥€n", "¥en", "Y#n", "¥en" }

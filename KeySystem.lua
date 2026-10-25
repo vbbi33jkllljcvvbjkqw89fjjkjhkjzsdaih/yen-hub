@@ -1,4 +1,4 @@
---/ Yen key system. Run(Config) returns true once a valid key is accepted, Notice(Params) shows a themed popup
+--/ Yen key system. Run returns true and the expiry time once a key is accepted, Terms asks for the Terms of Service, Notice shows a themed popup
 
 local Import = ...
 
@@ -28,6 +28,7 @@ if not ThemeOk then
 end
 
 local SavedKeyPath = "YenHub/key.txt"
+local TermsPath = "YenHub/tos.txt"
 
 local Module = {}
 
@@ -47,6 +48,10 @@ local function GetHwid()
 	end)
 
 	return Ok and Id or ""
+end
+
+local function GetDuration(Config)
+	return Config.Duration or 3600
 end
 
 local function BuildValidate(Config)
@@ -76,32 +81,48 @@ local function BuildValidate(Config)
 	end
 end
 
-local function LoadSavedKey()
-	if isfile(SavedKeyPath) then
-		local Key = readfile(SavedKeyPath)
+--/ The saved key file holds the key and the time it was entered, it only counts inside the duration
+local function ReadSavedKey(Config)
+	if not isfile(SavedKeyPath) then
+		return
+	end
 
-		if Key ~= "" then
-			return Key
-		end
+	local Key, Stamp = string.match(readfile(SavedKeyPath), "^(.-)\n(%d+)$")
+
+	Stamp = tonumber(Stamp)
+
+	if Key and Key ~= "" and Stamp and os.time() - Stamp < GetDuration(Config) then
+		return Key, Stamp
 	end
 end
 
-function Module.Run(Config)
+function Module.Forget()
+	pcall(function()
+		if isfile(SavedKeyPath) then
+			delfile(SavedKeyPath)
+		end
+	end)
+end
+
+function Module.Run(Config, Options)
+	Options = Options or {}
+
 	local Validate = BuildValidate(Config)
 
-	if Config.Remember then
-		local Saved = LoadSavedKey()
+	if Config.Remember and not Options.Fresh then
+		local Saved, SavedStamp = ReadSavedKey(Config)
 
 		if Saved then
 			local Ok, Result = pcall(Validate, Saved)
 
 			if Ok and Result then
-				return true
+				return true, SavedStamp + GetDuration(Config)
 			end
 		end
 	end
 
 	local Library = Open()
+	local Stamp = nil
 
 	local Result = Library:KeySystem({
 		Name = Config.Name,
@@ -112,8 +133,12 @@ function Module.Run(Config)
 		Validate = function(Key)
 			local Ok = Validate(Key)
 
-			if Ok and Config.Remember then
-				writefile(SavedKeyPath, Key)
+			if Ok then
+				Stamp = os.time()
+
+				if Config.Remember then
+					writefile(SavedKeyPath, Key .. "\n" .. Stamp)
+				end
 			end
 
 			return Ok
@@ -122,7 +147,57 @@ function Module.Run(Config)
 
 	Library:Exit()
 
-	return Result.Unlocked == true
+	if Result.Unlocked == true then
+		return true, (Stamp or os.time()) + GetDuration(Config)
+	end
+
+	return false
+end
+
+--/ Returns true when the terms are accepted. Once accepted it stays accepted until Version changes
+function Module.Terms(Terms)
+	if isfile(TermsPath) and readfile(TermsPath) == tostring(Terms.Version) then
+		return true
+	end
+
+	local Library = Open()
+	local Answer = Instance.new("BindableEvent")
+
+	Library:Notify({
+		Title = Terms.Title,
+		Description = Terms.Text,
+		Width = 540,
+		MaxHeight = 720,
+		Buttons = {
+			{
+				Name = "Accept",
+				Callback = function()
+					Answer:Fire(true)
+				end,
+			},
+			{
+				Name = "Decline",
+				TextColor = Color3.fromRGB(216, 19, 29),
+				Callback = function()
+					Answer:Fire(false)
+				end,
+			},
+		},
+	})
+
+	local Accepted = Answer.Event:Wait()
+
+	Answer:Destroy()
+
+	task.delay(1, Import.Safe("Terms", function()
+		Library:Exit()
+	end))
+
+	if Accepted then
+		writefile(TermsPath, tostring(Terms.Version))
+	end
+
+	return Accepted
 end
 
 function Module.Notice(Params)

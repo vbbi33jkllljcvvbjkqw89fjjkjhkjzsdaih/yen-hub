@@ -5,6 +5,9 @@ return {
 	Placeholder = "Key goes here",
 	Remember = true,
 
+	--/ Seconds a key stays valid after it is entered. Then the hub locks and asks for it again
+	Duration = 3600,
+
 	GetKeyLink = "",
 	DiscordLink = "",
 	TutorialLink = "",

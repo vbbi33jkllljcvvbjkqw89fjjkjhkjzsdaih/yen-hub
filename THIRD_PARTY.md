@@ -13,4 +13,4 @@ Farcal and its helper came without a license file. Get the author's permission t
 
 Both libraries are patched so that nothing reaches the console. Every callback, delayed task, thread and signal connection is protected, and `warn`/`error` output goes to `Import.Report`, which feeds the Diagnostics box in Settings.
 
-Farcal also has its own global (`FarcalLibrary`), a working Inter font, a bundled Spring, `Validate` support in the key system, and `Exit` no longer clears its own library reference (delayed callbacks used to crash after switching interface).
+Farcal also fixes sliders without a step returning NaN, closes single choice dropdowns after a pick, and lets notification cards grow (`MaxHeight`) and measure long text correctly. It has its own global (`FarcalLibrary`), a working Inter font, a bundled Spring, `Validate` support in the key system, and `Exit` no longer clears its own library reference (delayed callbacks used to crash after switching interface).
