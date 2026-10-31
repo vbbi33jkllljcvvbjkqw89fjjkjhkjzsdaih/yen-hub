@@ -1,66 +1,53 @@
 # Yen
 
-Hub, key system and loader for Yen scripts. Everything the loader needs lives in this repository, nothing is fetched from other people's repositories at runtime.
+Hub and key system for Yen scripts. Everything loads from this repository, which has to stay public.
 
 ## Use
 
-```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/Loader.lua"))()
-```
+Key system, game check and terms, then the script for the game:
 
-Checks that the game is supported, asks for a key, then loads the script for that game.
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/vbbi33jkllljcvvbjkqw89fjjkjhkjzsdaih/yen-hub/main/YenKeySystem.lua"))()
+```
 
 Hub only, no key and no game check:
 
 ```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/Hub.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/vbbi33jkllljcvvbjkqw89fjjkjhkjzsdaih/yen-hub/main/YenHub.lua"))()
 ```
 
 The interface (Obsidian or Farcal) is switched in Settings > Interface and remembered between runs.
-
-## Publish
-
-1. Create an empty public GitHub repository.
-2. Run `Tools/SetRepo.ps1 -User <your github name> -Repo <repository name>` once. It writes your raw url into the entry files and prints the loadstring.
-3. Upload every file in this folder to the repository (GitHub > Add file > Upload files, or `git push`). Keep the folder layout.
 
 ## Files
 
 | File | Job |
 | --- | --- |
-| `Loader.lua` | Main entry: game check, key, then the game script |
+| `YenKeySystem.lua` | Main entry: game list, key, terms, then the game script. All key settings are at the top |
+| `YenHub.lua` | Loads the hub without the key system |
 | `Hub.lua` | The hub, drawn by Obsidian or Farcal |
-| `KeySystem.lua` | Key window (`Run`) and popups (`Notice`) |
-| `KeyConfig.lua` | Name, links and how keys are checked |
-| `Games.lua` | Supported games and the script each one loads |
-| `Terms.lua` | Terms of Service shown after the key |
-| `Theme.lua` | Colors shared by every interface |
 | `Import.lua` | Fetches files from this repository |
+| `Theme.lua` | Colors shared by every interface |
 | `Libraries/`, `Assets/` | UI libraries, font and logo, see `THIRD_PARTY.md` |
 
 ## Add a game
 
-Add an entry to `Games.lua` with the PlaceId (or GameId) and the script to load, then upload the script next to it.
+Add an entry to `Games` in `YenKeySystem.lua` with the PlaceIds or GameIds and the script to load (a path in this repo or a full url). A GameId covers every place in that game.
 
-## Key lifetime and terms
+## Keys and terms
 
-A key is valid for `Duration` seconds (one hour, set in `KeyConfig.lua`). When it runs out the hub unloads and the key window comes back; the hub shows the time left in Live Stats.
+A key is valid for `Duration` seconds (one hour by default). When it runs out the hub unloads and the key window comes back; the hub shows the time left in Live Stats.
 
-After the key, players must accept the Terms of Service in `Terms.lua`. The acceptance is remembered until you raise `Version` in that file. The text is a template, have it checked before you rely on it.
+`Provider = "Static"` compares against `Keys`. Anything in a public repository can be read by anyone, so this only works as a speed bump. For real protection set `Provider = "Http"` and point `HttpUrl` at your own server. It receives `{Key}` and `{Hwid}` and must answer `true` or `{"valid":true}`. A valid key is remembered in `YenHub/key.txt`.
 
-## Keys
+After the key, players must accept the terms in `Terms`. The acceptance is remembered until you raise `Version`. The text is a template, have it checked before you rely on it.
 
-`Provider = "Static"` compares against `Keys` in `KeyConfig.lua`. Anything in a public repository can be read by anyone, so this only works as a speed bump.
-
-For real protection set `Provider = "Http"` and point `Http.Url` at your own server. It receives `{Key}` and `{Hwid}` and must answer `true` or `{"valid":true}`. A valid key is remembered in `YenHub/key.txt` and checked again on every run.
-
-## Develop locally
+## Develop the hub locally
 
 Copy this folder into your executor workspace (for example `YenHub/dev/`), then:
 
 ```lua
 getgenv().YenLocalRoot = "YenHub/dev/"
-loadstring(readfile("YenHub/dev/Loader.lua"))()
+loadstring(readfile("YenHub/dev/Hub.lua"))()
 ```
 
 Files are read from the workspace instead of GitHub.

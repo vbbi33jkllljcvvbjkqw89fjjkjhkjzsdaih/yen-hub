@@ -1,4 +1,4 @@
---/ Yen hub. One feature set, drawn by Obsidian or Farcal. Switch in Settings > Interface
+-- Yen hub. One feature set, drawn by Obsidian or Farcal. Switch in Settings > Interface
 
 local Import = ...
 
@@ -84,7 +84,7 @@ local function Run()
 		end
 	end
 
-	--/ Obsidian
+	-- Obsidian
 	Renderers.Obsidian = function()
 		local Library = Import.Load("Libraries/Obsidian/Library.lua")
 		local SaveManager = Import.Load("Libraries/Obsidian/SaveManager.lua")
@@ -248,7 +248,7 @@ local function Run()
 				return
 			end
 
-			--/ Obsidian leaves the global input connection of every key picker alive
+			-- Obsidian leaves the global input connection of every key picker alive
 			for _, Option in Library.Options do
 				if Option.Type == "KeyPicker" and Option.Destroy then
 					pcall(Option.Destroy, Option)
@@ -261,7 +261,7 @@ local function Run()
 		return Ui
 	end
 
-	--/ Farcal
+	-- Farcal
 	Renderers.Farcal = function()
 		local Library = Import.Load("Libraries/Farcal.lua")
 

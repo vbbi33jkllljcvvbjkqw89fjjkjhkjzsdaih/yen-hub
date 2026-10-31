@@ -1,4 +1,4 @@
---/ Silver palette taken from the logo, shared by every interface
+-- Silver palette taken from the logo, shared by every interface
 
 return {
 	Farcal = {

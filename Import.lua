@@ -1,4 +1,4 @@
---/ Repo file access. Remote by default, executor workspace when YenLocalRoot is set (dev mode)
+-- Repo file access. Remote by default, executor workspace when YenLocalRoot is set (dev mode)
 
 local Import = {
 	Base = "https://raw.githubusercontent.com/vbbi33jkllljcvvbjkqw89fjjkjhkjzsdaih/yen-hub/main/",
@@ -45,7 +45,7 @@ function Import.Binary(Path)
 	return Fetch(Path)
 end
 
---/ Compiles once per path, then every call runs a fresh copy of the chunk
+-- Compiles once per path, then every call runs a fresh copy of the chunk
 function Import.Load(Path, ...)
 	local Chunk = Import.Chunks[Path]
 
@@ -64,7 +64,7 @@ function Import.Load(Path, ...)
 	return Chunk(Import, ...)
 end
 
---/ Downloads a binary once into the workspace, re-downloads if the header does not match
+-- Downloads a binary once into the workspace, re-downloads if the header does not match
 function Import.Asset(Path, Target, Magic)
 	local Cached = isfile(Target) and readfile(Target) or ""
 
@@ -79,7 +79,7 @@ function Import.Asset(Path, Target, Magic)
 	return getcustomasset(Target)
 end
 
---/ Nothing in Yen writes to the console. Problems go here and are shown in the UI
+-- Nothing in Yen writes to the console. Problems go here and are shown in the UI
 
 Import.Errors = {}
 
